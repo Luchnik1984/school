@@ -1,5 +1,7 @@
 package ru.hogwarts.school.model;
 
+import java.util.Objects;
+
 public class Student {
     private Long id;
     private String name;
@@ -33,5 +35,18 @@ public class Student {
 
     public void setAge(int age) {
         this.age = age;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this==o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Student student = (Student) o;
+        return Objects.equals(id, student.id); // Сравниваем только по id
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id); // Хеш-код на основе id
     }
 }

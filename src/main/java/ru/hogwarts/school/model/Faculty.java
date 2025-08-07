@@ -1,5 +1,7 @@
 package ru.hogwarts.school.model;
 
+import java.util.Objects;
+
 public class Faculty {
 
     private Long id;
@@ -34,5 +36,18 @@ public class Faculty {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this ==o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Faculty faculty = (Faculty) o;
+        return Objects.equals(id, faculty.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }
