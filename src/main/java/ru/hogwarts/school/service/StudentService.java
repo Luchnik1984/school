@@ -23,10 +23,10 @@ public class StudentService {
         return students.get(id);
     }
 
-    public Student updateStudent(long id, Student student) {
-        if (students.containsKey(id)) {
-            student.setId(id);
-            students.put(id, student);
+    public Student updateStudent( Student student) {
+        if (students.containsKey(student.getId())) {
+
+            students.put(student.getId(), student);
             return student;
         }
         return null;

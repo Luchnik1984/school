@@ -24,10 +24,10 @@ public class FacultyService {
         return faculties.get(id);
     }
 
-    public Faculty updateFaculty(long id, Faculty faculty) {
-        if (faculties.containsKey(id)) {
-            faculty.setId(id);
-            faculties.put(id, faculty);
+    public Faculty updateFaculty(Faculty faculty) {
+        if (faculties.containsKey(faculty.getId())) {
+
+            faculties.put(faculty.getId(), faculty);
             return faculty;
         }
         return null;

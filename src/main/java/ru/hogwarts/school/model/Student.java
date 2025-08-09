@@ -13,7 +13,7 @@ public class Student {
         this.age = age;
     }
 
-    public Long getId() {
+    public long getId() {
         return id;
     }
 
@@ -48,5 +48,14 @@ public class Student {
     @Override
     public int hashCode() {
         return Objects.hash(id); // Хеш-код на основе id
+    }
+
+    @Override
+    public String toString() {
+        return "Student{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", age=" + age +
+                '}';
     }
 }

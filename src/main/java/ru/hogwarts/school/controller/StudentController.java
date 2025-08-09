@@ -43,9 +43,9 @@ public class StudentController {
     @Operation(summary = "Обновить данные студента")
     @PutMapping
     public ResponseEntity<Student> updateStudent(@RequestBody Student student){
-        Student updatedStudent=service.updateStudent(student.getId(),student);
+        Student updatedStudent=service.updateStudent(student);
         if (updatedStudent==null){
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.badRequest().build();
         }
         return ResponseEntity.ok(updatedStudent);
     }
