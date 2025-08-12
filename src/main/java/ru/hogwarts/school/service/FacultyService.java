@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class FacultyService {
-    private final Map<Long, Faculty>faculties = new HashMap<>();
+    private final Map<Long, Faculty> faculties = new HashMap<>();
     private long lastId = 0;
 
     public Faculty addFaculty(Faculty faculty) {
@@ -24,14 +24,15 @@ public class FacultyService {
         return faculties.get(id);
     }
 
-    public Faculty updateFaculty(Faculty faculty) {
-        if (faculties.containsKey(faculty.getId())) {
-
+    public Faculty updateFaculty(long id,Faculty faculty) {
+        if (faculty==null|| !faculties.containsKey(faculty.getId())) {
+            return null;
+        }
+        faculty.setId(id);
             faculties.put(faculty.getId(), faculty);
             return faculty;
         }
-        return null;
-    }
+
 
     public Faculty removeFaculty(long id) {
         return faculties.remove(id);

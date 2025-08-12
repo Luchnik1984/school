@@ -43,11 +43,11 @@ public class FacultyController {
     @Operation(summary = "Обновить данные факультета")
     @PutMapping
     ResponseEntity<Faculty> updateFaculty(@RequestBody Faculty faculty){
-     Faculty updetedFaculty=service.updateFaculty(faculty);
-     if (updetedFaculty==null){
+     Faculty updatedFaculty=service.updateFaculty(faculty.getId(), faculty);
+     if (updatedFaculty==null){
          return ResponseEntity.badRequest().build();
      }
-     return ResponseEntity.ok(updetedFaculty);
+     return ResponseEntity.ok(updatedFaculty);
     }
 
     @Operation(summary = "Удалить факультет")

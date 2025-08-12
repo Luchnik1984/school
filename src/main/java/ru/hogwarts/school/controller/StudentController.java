@@ -24,8 +24,8 @@ public class StudentController {
     @Operation(summary = "Добавить студента")
     @PostMapping
     public ResponseEntity<Student> addStudent(@RequestBody Student student){
-        Student adddedStudent = service.addStudent(student);
-        return ResponseEntity.ok(adddedStudent);
+        Student addedStudent = service.addStudent(student);
+        return ResponseEntity.ok(addedStudent);
     }
 
     @Operation(summary = "Получить студента по ID")
@@ -43,7 +43,7 @@ public class StudentController {
     @Operation(summary = "Обновить данные студента")
     @PutMapping
     public ResponseEntity<Student> updateStudent(@RequestBody Student student){
-        Student updatedStudent=service.updateStudent(student);
+        Student updatedStudent=service.updateStudent(student.getId(),student);
         if (updatedStudent==null){
             return ResponseEntity.badRequest().build();
         }
