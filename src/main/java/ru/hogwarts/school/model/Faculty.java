@@ -1,18 +1,19 @@
 package ru.hogwarts.school.model;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+
 import java.util.Objects;
 
+@Entity
 public class Faculty {
-
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
     private String color;
-
-    public Faculty(Long id, String name, String color) {
-        this.id = id;
-        this.name = name;
-        this.color = color;
-    }
 
     public String getColor() {
         return color;
@@ -40,7 +41,7 @@ public class Faculty {
 
     @Override
     public boolean equals(Object o) {
-        if (this ==o) return true;
+        if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Faculty faculty = (Faculty) o;
         return Objects.equals(id, faculty.id);

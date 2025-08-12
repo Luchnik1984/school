@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.hogwarts.school.model.Faculty;
 import ru.hogwarts.school.service.FacultyService;
+
 import java.util.Collection;
 
 @RestController
@@ -42,36 +43,36 @@ public class FacultyController {
 
     @Operation(summary = "Обновить данные факультета")
     @PutMapping
-    ResponseEntity<Faculty> updateFaculty(@RequestBody Faculty faculty){
-     Faculty updatedFaculty=service.updateFaculty(faculty.getId(), faculty);
-     if (updatedFaculty==null){
-         return ResponseEntity.badRequest().build();
-     }
-     return ResponseEntity.ok(updatedFaculty);
+    ResponseEntity<Faculty> updateFaculty(@RequestBody Faculty faculty) {
+        Faculty updatedFaculty = service.updateFaculty(faculty.getId(), faculty);
+        if (updatedFaculty == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(updatedFaculty);
     }
 
     @Operation(summary = "Удалить факультет")
     @DeleteMapping("{id}")
     public ResponseEntity<Void> deleteFaculty(
             @Parameter(description = "ID факультета")
-            @PathVariable Long id){
+            @PathVariable Long id) {
         service.removeFaculty(id);
         return ResponseEntity.ok().build();
     }
 
     @Operation(summary = "Получить все факультеты")
     @GetMapping
-    public ResponseEntity<Collection<Faculty>> getAllFaculties(){
-        return ResponseEntity.ok(service.getAllFaculties().values());
+    public ResponseEntity<Collection<Faculty>> getAllFaculties() {
+        return ResponseEntity.ok(service.getAllFaculties());
     }
 
     @Operation(summary = "Фильтр по цвету")
     @GetMapping("/color/{color}")
     public ResponseEntity<Collection<Faculty>> getFacultyByColor(
             @Parameter(description = "Цвет факультета")
-            @PathVariable String color){
+            @PathVariable String color) {
         Collection<Faculty> filteredFaculties = service.getFacultyByColor(color);
-        if (filteredFaculties.isEmpty()){
+        if (filteredFaculties.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(filteredFaculties);
