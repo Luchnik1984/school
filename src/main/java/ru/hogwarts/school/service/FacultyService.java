@@ -24,25 +24,24 @@ public class FacultyService {
         return faculties.get(id);
     }
 
-    public Faculty updateFaculty(long id,Faculty faculty) {
-        if (faculty==null|| !faculties.containsKey(faculty.getId())) {
+    public Faculty updateFaculty(long id, Faculty faculty) {
+        if (faculty == null || !faculties.containsKey(faculty.getId())) {
             return null;
         }
-        faculty.setId(id);
-            faculties.put(faculty.getId(), faculty);
-            return faculty;
-        }
+        faculties.put(id, faculty);
+        return faculty;
+    }
 
 
     public Faculty removeFaculty(long id) {
         return faculties.remove(id);
     }
 
-    public Map<Long, Faculty> getAllFaculties(){
+    public Map<Long, Faculty> getAllFaculties() {
         return new HashMap<>(faculties);
     }
 
-    public Collection<Faculty> getFacultyByColor(String color){
+    public Collection<Faculty> getFacultyByColor(String color) {
         return faculties.values().stream()
                 .filter(faculty -> faculty.getColor().equalsIgnoreCase(color))
                 .collect(Collectors.toList());

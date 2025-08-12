@@ -23,14 +23,13 @@ public class StudentService {
         return students.get(id);
     }
 
-    public Student updateStudent( long id, Student student) {
-        if (student==null||!students.containsKey(id)) {
+    public Student updateStudent(long id, Student student) {
+        if (student == null || !students.containsKey(id)) {
             return null;
         }
-        student.setId(id);
-            students.put(student.getId(), student);
-            return student;
-        }
+        students.put(id, student);
+        return student;
+    }
 
 
     public Student removeStudent(long id) {
@@ -41,10 +40,10 @@ public class StudentService {
         return new HashMap<>(students);
     }
 
-    public Collection<Student> getStudentByAge(int age){
+    public Collection<Student> getStudentByAge(int age) {
         return students.values().stream()
-                .filter(student -> student.getAge()==age)
+                .filter(student -> student.getAge() == age)
                 .collect(Collectors.toList());
     }
 
-    }
+}
