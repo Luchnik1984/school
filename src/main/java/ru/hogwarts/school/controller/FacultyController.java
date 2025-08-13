@@ -6,7 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.hogwarts.school.exeption.EntityNotFoundException;
+import ru.hogwarts.school.ecxeption.EntityNotFoundException;
 import ru.hogwarts.school.model.Faculty;
 import ru.hogwarts.school.service.FacultyService;
 
@@ -66,7 +66,7 @@ public class FacultyController {
         if (allFaculties.isEmpty()) {
             throw new EntityNotFoundException("Факультеты не найдены");
         }
-        return ResponseEntity.ok(service.getAllFaculties());
+        return ResponseEntity.ok(allFaculties);
     }
 
     @Operation(summary = "Фильтр по цвету")

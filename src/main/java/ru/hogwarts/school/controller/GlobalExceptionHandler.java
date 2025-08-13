@@ -4,8 +4,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import ru.hogwarts.school.exeption.EntityAlreadyExistsException;
-import ru.hogwarts.school.exeption.EntityNotFoundException;
+import ru.hogwarts.school.ecxeption.EntityAlreadyExistsException;
+import ru.hogwarts.school.ecxeption.EntityNotFoundException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {

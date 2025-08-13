@@ -6,7 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.hogwarts.school.exeption.EntityNotFoundException;
+import ru.hogwarts.school.ecxeption.EntityNotFoundException;
 import ru.hogwarts.school.model.Student;
 import ru.hogwarts.school.service.StudentService;
 
@@ -66,7 +66,7 @@ public class StudentController {
         if (allStudents.isEmpty()) {
             throw new EntityNotFoundException("Студенты не найдены");
         }
-        return ResponseEntity.ok(service.getAllStudents());
+        return ResponseEntity.ok(allStudents);
     }
 
     @Operation(summary = "Фильтр по возрасту")

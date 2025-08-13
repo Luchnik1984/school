@@ -1,4 +1,4 @@
-package ru.hogwarts.school.exeption;
+package ru.hogwarts.school.ecxeption;
 
 public class EntityAlreadyExistsException extends RuntimeException{
     public EntityAlreadyExistsException(String message){
