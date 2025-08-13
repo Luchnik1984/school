@@ -2,6 +2,8 @@ package ru.hogwarts.school.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.hogwarts.school.exeption.EntityAlreadyExistsException;
+import ru.hogwarts.school.exeption.EntityNotFoundException;
 import ru.hogwarts.school.model.Student;
 import ru.hogwarts.school.repository.StudentRepository;
 
@@ -18,8 +20,12 @@ public class StudentService {
     }
 
     public Student addStudent(Student student) {
-        return studentRepository.save(student);
-    }
+        if (studentRepository.existsByName(student.getName())) {
+            throw new EntityAlreadyExistsException("Студент с именем " + student.getName() + " уже существует");
+        }
+            return studentRepository.save(student);
+        }
+
 
     public Student getStudent(long id) {
         return studentRepository.findById(id).orElse(null);
@@ -28,10 +34,16 @@ public class StudentService {
     public Student updateStudent(long id, Student student) {
         return studentRepository.findById(id)
                 .map(existingStudent -> {
+                    if (!existingStudent.getName().equalsIgnoreCase(student.getName())
+                        && studentRepository.existsByName(student.getName())){
+                        throw new EntityAlreadyExistsException(
+                                "Студент с именем " + student.getName() + " уже существует");
+                    }
                     student.setId(id);
                     return studentRepository.save(student);
                 })
-                .orElse(null);
+                .orElseThrow(() ->new EntityNotFoundException(
+                        "Студент с id " + id + " не найден"));
     }
 
 
@@ -45,6 +57,8 @@ public class StudentService {
 
     public Collection<Student> getStudentByAge(int age) {
         return studentRepository.findByAge(age);
+
+
     }
 
 }

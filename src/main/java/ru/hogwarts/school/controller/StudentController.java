@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.hogwarts.school.exeption.EntityNotFoundException;
 import ru.hogwarts.school.model.Student;
 import ru.hogwarts.school.service.StudentService;
 
@@ -36,7 +37,7 @@ public class StudentController {
             @PathVariable Long id) {
         Student student = service.getStudent(id);
         if (student == null) {
-            return ResponseEntity.notFound().build();
+            throw new EntityNotFoundException("Студент с id " + id + " не найден");
         }
         return ResponseEntity.ok(student);
     }
@@ -45,9 +46,7 @@ public class StudentController {
     @PutMapping
     public ResponseEntity<Student> updateStudent(@RequestBody Student student) {
         Student updatedStudent = service.updateStudent(student.getId(), student);
-        if (updatedStudent == null) {
-            return ResponseEntity.badRequest().build();
-        }
+
         return ResponseEntity.ok(updatedStudent);
     }
 
@@ -63,6 +62,10 @@ public class StudentController {
     @Operation(summary = "Получить всех студентов")
     @GetMapping
     public ResponseEntity<Collection<Student>> getAllStudents() {
+        Collection<Student> allStudents = service.getAllStudents();
+        if (allStudents.isEmpty()) {
+            throw new EntityNotFoundException("Студенты не найдены");
+        }
         return ResponseEntity.ok(service.getAllStudents());
     }
 
@@ -71,7 +74,7 @@ public class StudentController {
     public ResponseEntity<Collection<Student>> getStudentByAge(@PathVariable int age) {
         Collection<Student> filteredStudents = service.getStudentByAge(age);
         if (filteredStudents.isEmpty()) {
-            return ResponseEntity.notFound().build();
+             throw new EntityNotFoundException("Студенты возрастом " + age + " не найдены");
         }
         return ResponseEntity.ok(filteredStudents);
     }

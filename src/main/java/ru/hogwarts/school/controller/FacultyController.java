@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.hogwarts.school.exeption.EntityNotFoundException;
 import ru.hogwarts.school.model.Faculty;
 import ru.hogwarts.school.service.FacultyService;
 
@@ -36,7 +37,7 @@ public class FacultyController {
             @PathVariable Long id) {
         Faculty addedFaculty = service.getFaculty(id);
         if (addedFaculty == null) {
-            return ResponseEntity.notFound().build();
+            throw new EntityNotFoundException("Факультет с id " + id + " не найден");
         }
         return ResponseEntity.ok(addedFaculty);
     }
@@ -45,9 +46,7 @@ public class FacultyController {
     @PutMapping
     ResponseEntity<Faculty> updateFaculty(@RequestBody Faculty faculty) {
         Faculty updatedFaculty = service.updateFaculty(faculty.getId(), faculty);
-        if (updatedFaculty == null) {
-            return ResponseEntity.badRequest().build();
-        }
+
         return ResponseEntity.ok(updatedFaculty);
     }
 
@@ -63,6 +62,10 @@ public class FacultyController {
     @Operation(summary = "Получить все факультеты")
     @GetMapping
     public ResponseEntity<Collection<Faculty>> getAllFaculties() {
+        Collection<Faculty> allFaculties=service.getAllFaculties();
+        if (allFaculties.isEmpty()) {
+            throw new EntityNotFoundException("Факультеты не найдены");
+        }
         return ResponseEntity.ok(service.getAllFaculties());
     }
 
@@ -73,7 +76,7 @@ public class FacultyController {
             @PathVariable String color) {
         Collection<Faculty> filteredFaculties = service.getFacultyByColor(color);
         if (filteredFaculties.isEmpty()) {
-            return ResponseEntity.notFound().build();
+            throw new EntityNotFoundException("Факультет " + color + " не найден");
         }
         return ResponseEntity.ok(filteredFaculties);
     }

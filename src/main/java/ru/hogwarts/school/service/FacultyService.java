@@ -2,6 +2,8 @@ package ru.hogwarts.school.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.hogwarts.school.exeption.EntityAlreadyExistsException;
+import ru.hogwarts.school.exeption.EntityNotFoundException;
 import ru.hogwarts.school.model.Faculty;
 import ru.hogwarts.school.repository.FacultyRepository;
 
@@ -17,6 +19,10 @@ public class FacultyService {
     }
 
     public Faculty addFaculty(Faculty faculty) {
+        if (facultyRepository.existsByName(faculty.getName())){
+            throw new EntityAlreadyExistsException(
+                    "Факультет с названием " + faculty.getName() + " уже существует");
+        }
         return facultyRepository.save(faculty);
     }
 
@@ -28,10 +34,15 @@ public class FacultyService {
     public Faculty updateFaculty(long id, Faculty faculty) {
         return facultyRepository.findById(id)
                 .map(existingFaculty -> {
+                    if (!existingFaculty.getName().equalsIgnoreCase(faculty.getName())
+                        && facultyRepository.existsByName(faculty.getName())){
+                        throw new EntityAlreadyExistsException(
+                                "Факультет с названием " + faculty.getName() + " уже существует");
+                    }
                     faculty.setId(id);
                     return facultyRepository.save(faculty);
                 })
-                .orElse(null);
+                .orElseThrow(() -> new EntityNotFoundException("Факультет с id " + id + " не найден"));
     }
 
 
