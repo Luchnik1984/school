@@ -78,5 +78,16 @@ public class FacultyController {
         return ResponseEntity.ok(filteredFaculties);
     }
 
+    @Operation(summary = "Поиск факультета по имени или цвету")
+    @GetMapping("/search")
+    public ResponseEntity<Collection<Faculty>> getFacultiesByNameOrColor(
+            @Parameter(description = "название или цвет факультета") @RequestParam String query) {
+        Collection<Faculty> faculties = service.getFacultiesByNameOrColor(query);
+        if (faculties.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(faculties);
+    }
+
 }
 
