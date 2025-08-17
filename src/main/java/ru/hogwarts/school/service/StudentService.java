@@ -2,7 +2,9 @@ package ru.hogwarts.school.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.hogwarts.school.model.Faculty;
 import ru.hogwarts.school.model.Student;
+import ru.hogwarts.school.repository.FacultyRepository;
 import ru.hogwarts.school.repository.StudentRepository;
 
 import java.util.Collection;
@@ -11,10 +13,12 @@ import java.util.Collection;
 @Service
 public class StudentService {
     private final StudentRepository studentRepository;
+    private final FacultyRepository facultyRepository;
 
     @Autowired
-    public StudentService(StudentRepository studentRepository) {
+    public StudentService(StudentRepository studentRepository, FacultyRepository facultyRepository) {
         this.studentRepository = studentRepository;
+        this.facultyRepository = facultyRepository;
     }
 
     public Student addStudent(Student student) {
@@ -51,4 +55,7 @@ public class StudentService {
         return studentRepository.findByAgeBetween(minAge, maxAge);
     }
 
+    public Faculty getFacultyByStudentId(Long studentId) {
+        return facultyRepository.findByStudentsId(studentId);
+    }
 }
