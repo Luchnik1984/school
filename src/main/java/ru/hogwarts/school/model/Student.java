@@ -15,7 +15,7 @@ public class Student {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "faculty_id")// создадим столбец faculty_id в таблице student
-    @JsonBackReference
+
     private Faculty faculty;
 
     public Faculty getFaculty() {
