@@ -16,7 +16,8 @@ public class StudentMapper {
                 student.getFaculty()!=null
                 ?new FacultyWithoutStudents(
                         student.getFaculty().getId(),
-                        student.getFaculty().getName())
+                        student.getFaculty().getName(),
+                        student.getFaculty().getColor())
                         :null
                 );
         }

@@ -3,9 +3,6 @@ package ru.hogwarts.school.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import jdk.jfr.Description;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.hogwarts.school.dto.FacultyWithoutStudents;
@@ -19,7 +16,6 @@ import ru.hogwarts.school.service.StudentService;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
-import static org.springframework.data.jpa.domain.AbstractPersistable_.id;
 
 @RestController
 @RequestMapping("/students")
@@ -118,7 +114,8 @@ public class StudentController {
         }
         return ResponseEntity.ok(new FacultyWithoutStudents(
                 faculty.getId(),
-                faculty.getName()));
+                faculty.getName(),
+                faculty.getColor()));
     }
 
 }

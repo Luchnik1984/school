@@ -26,7 +26,8 @@ public class FacultyMapper {
     public FacultyWithoutStudents toFacultyWithoutStudents(Faculty faculty) {
         return new FacultyWithoutStudents(
                 faculty.getId(),
-                faculty.getName()
+                faculty.getName(),
+                faculty.getColor()
         );
     }
 }

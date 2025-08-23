@@ -3,13 +3,13 @@ package ru.hogwarts.school.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.hogwarts.school.dto.FacultyWithStudents;
 import ru.hogwarts.school.dto.FacultyWithoutStudents;
 import ru.hogwarts.school.dto.StudentWithoutFaculty;
 import ru.hogwarts.school.mapper.FacultyMapper;
+import ru.hogwarts.school.mapper.StudentMapper;
 import ru.hogwarts.school.model.Faculty;
 import ru.hogwarts.school.model.Student;
 import ru.hogwarts.school.service.FacultyService;
@@ -23,19 +23,21 @@ import java.util.stream.Collectors;
 @Tag(name = "Faculty Controller", description = "Управление факультетами")
 public class FacultyController {
     private final FacultyService service;
-    private final FacultyMapper mapper;
+    private final FacultyMapper facultyMapper;
+    private final StudentMapper studentMapper;
 
 
-    public FacultyController(FacultyService service, FacultyMapper mapper) {
+    public FacultyController(FacultyService service, FacultyMapper facultyMapper, StudentMapper studentMapper) {
         this.service = service;
-        this.mapper = mapper;
+        this.facultyMapper = facultyMapper;
+        this.studentMapper = studentMapper;
     }
 
     @Operation(summary = "Добавить факультет")
     @PostMapping
     ResponseEntity<FacultyWithStudents> addFaculty(@RequestBody Faculty faculty) {
         Faculty addedFaculty = service.addFaculty(faculty);
-        return ResponseEntity.ok(mapper.toFacultyWithStudents(addedFaculty));
+        return ResponseEntity.ok(facultyMapper.toFacultyWithStudents(addedFaculty));
     }
 
     @Operation(summary = "Получить факультет по ID")
@@ -47,7 +49,7 @@ public class FacultyController {
         if (addedFaculty == null) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(mapper.toFacultyWithStudents(addedFaculty));
+        return ResponseEntity.ok(facultyMapper.toFacultyWithStudents(addedFaculty));
     }
 
     @Operation(summary = "Обновить данные факультета")
@@ -57,7 +59,7 @@ public class FacultyController {
         if (updatedFaculty == null) {
             return ResponseEntity.badRequest().build();
         }
-        return ResponseEntity.ok(mapper.toFacultyWithStudents(updatedFaculty));
+        return ResponseEntity.ok(facultyMapper.toFacultyWithStudents(updatedFaculty));
     }
 
     @Operation(summary = "Удалить факультет")
@@ -73,7 +75,7 @@ public class FacultyController {
     @GetMapping
     public ResponseEntity<Collection<FacultyWithoutStudents>> getAllFaculties() {
         return ResponseEntity.ok(service.getAllFaculties().stream()
-                .map(mapper::toFacultyWithoutStudents)
+                .map(facultyMapper::toFacultyWithoutStudents)
                 .collect(Collectors.toList()));
     }
 
@@ -87,7 +89,7 @@ public class FacultyController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(filteredFaculties.stream()
-                .map(mapper::toFacultyWithoutStudents)
+                .map(facultyMapper::toFacultyWithoutStudents)
                 .collect(Collectors.toList()));
     }
 
@@ -100,7 +102,7 @@ public class FacultyController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(faculties.stream()
-                .map(mapper::toFacultyWithoutStudents)
+                .map(facultyMapper::toFacultyWithoutStudents)
                 .collect(Collectors.toList()));
     }
 
@@ -113,9 +115,7 @@ public class FacultyController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(students.stream()
-                .map(student -> new StudentWithoutFaculty(
-                        student.getId(),
-                        student.getName()))
+                .map(studentMapper::toStudentWithoutFaculty)
                 .collect(Collectors.toList()));
     }
 
