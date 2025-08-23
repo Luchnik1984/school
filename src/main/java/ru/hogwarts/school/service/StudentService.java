@@ -1,6 +1,5 @@
 package ru.hogwarts.school.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.hogwarts.school.model.Faculty;
 import ru.hogwarts.school.model.Student;
@@ -31,8 +30,10 @@ public class StudentService {
     public Student updateStudent(long id, Student student) {
         return studentRepository.findById(id)
                 .map(existingStudent -> {
-                    student.setId(id);
-                    return studentRepository.save(student);
+                    existingStudent.setName(student.getName());
+                    existingStudent.setAge(student.getAge());
+                    existingStudent.setFaculty(student.getFaculty());
+                    return studentRepository.save(existingStudent);
                 })
                 .orElse(null);
     }
