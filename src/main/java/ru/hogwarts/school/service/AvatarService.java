@@ -30,7 +30,7 @@ public class AvatarService {
 
     // Константа для ширины превью
     private static final int PREVIEW_WIDTH = 100;
-    private static final int STREAM_BUFFER_SIZE=1024;
+    private static final int STREAM_BUFFER_SIZE = 1024;
 
     public AvatarService(AvatarRepository avatarRepository, StudentRepository studentRepository) {
         this.avatarRepository = avatarRepository;
@@ -72,16 +72,16 @@ public class AvatarService {
     private byte[] generatePreviewData(Path filePath) throws IOException {
         try (
                 InputStream is = Files.newInputStream(filePath);
-                BufferedInputStream bis = new BufferedInputStream(is,STREAM_BUFFER_SIZE);
+                BufferedInputStream bis = new BufferedInputStream(is, STREAM_BUFFER_SIZE);
                 ByteArrayOutputStream baos = new ByteArrayOutputStream()
-            ){
-                 // Читаем оригинальное изображение
-                BufferedImage originalImage = ImageIO.read(bis);
+        ) {
+            // Читаем оригинальное изображение
+            BufferedImage originalImage = ImageIO.read(bis);
 
-                if (originalImage == null) {
+            if (originalImage == null) {
                 // Если это не изображение, возвращаем пустой массив
                 return new byte[0];
-                }
+            }
 
             // Рассчитываем высоту пропорционально ширине
             int originalWidth = originalImage.getWidth();
