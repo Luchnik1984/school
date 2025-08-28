@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 @Component
 public class FacultyMapper {
     public FacultyWithStudents toFacultyWithStudents(Faculty faculty) {
+
         return new FacultyWithStudents(
                 faculty.getId(),
                 faculty.getName(),

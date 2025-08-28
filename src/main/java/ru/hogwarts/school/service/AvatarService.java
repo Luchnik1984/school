@@ -1,6 +1,6 @@
 package ru.hogwarts.school.service;
 
-import jakarta.annotation.PostConstruct;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -9,148 +9,152 @@ import ru.hogwarts.school.model.Student;
 import ru.hogwarts.school.repository.AvatarRepository;
 import ru.hogwarts.school.repository.StudentRepository;
 
+
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
+
+import static java.nio.file.StandardOpenOption.CREATE_NEW;
 
 @Service
+@Transactional
 public class AvatarService {
     private final AvatarRepository avatarRepository;
     private final StudentRepository studentRepository;
 
-    @Value("${avatars.directory.path:./avatars}")
-    private String avatarsDirectory;
+    @Value("${avatar.directory.path}")
+    private String avatarsDir;
+
+    // Константа для ширины превью
+    private static final int PREVIEW_WIDTH = 100;
+    private static final int STREAM_BUFFER_SIZE=1024;
 
     public AvatarService(AvatarRepository avatarRepository, StudentRepository studentRepository) {
         this.avatarRepository = avatarRepository;
         this.studentRepository = studentRepository;
-
     }
 
-    @PostConstruct
-    public void init() {
-        createAvatarsDirectory();
-    }
-
-    public Avatar createAvatar(Avatar avatar) {
-        return avatarRepository.save(avatar);
-    }
-
-
-    public Avatar getAvatarById(Long id) {
-        return avatarRepository.findById(id).orElse(null);
-    }
-
-    public Avatar getAvatarByStudentId(Long studentId) {
-        return avatarRepository.findByStudentId(studentId).orElse(null);
-    }
-
-    public Avatar updateAvatar(Long id, Avatar avatar) {
-        return avatarRepository.findById(id)
-                .map(existingAvatar -> {
-                    existingAvatar.setFilePath(avatar.getFilePath());
-                    existingAvatar.setFileSize(avatar.getFileSize());
-                    existingAvatar.setMediaType(avatar.getMediaType());
-                    existingAvatar.setData(avatar.getData());
-                    existingAvatar.setStudent(avatar.getStudent());
-                    return avatarRepository.save(existingAvatar);
-                })
-                .orElse(null);
-    }
-
-    public void deleteAvatar(Long id) {
-        avatarRepository.deleteById(id);
-    }
-
-    public List<Avatar> getAllAvatars() {
-        return avatarRepository.findAll();
-    }
-
-    public Avatar uploadAvatar(Long studentId, MultipartFile file) throws IOException {
+    public void uploadAvatar(Long studentId, MultipartFile avatarFile) throws IOException {
         Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+                .orElseThrow(() -> new RuntimeException("Student not found with id: " + studentId));
 
-        // Создаем директорию если не существует
-        createAvatarsDirectory();
+        Path filePath = Path.of(avatarsDir, studentId + "." + getExtensions(avatarFile.getOriginalFilename()));
+        Files.createDirectories(filePath.getParent());
+        Files.deleteIfExists(filePath);
 
-        // Генерируем путь для сохранения файла
-        String originalFilename = file.getOriginalFilename();
-        String fileExtension = getFileExtension(originalFilename);
-        String fileName = "student_" + studentId + fileExtension;
-        Path filePath = Path.of(avatarsDirectory, fileName);
+        try (
+                InputStream is = avatarFile.getInputStream();
+                OutputStream os = Files.newOutputStream(filePath, CREATE_NEW);
+                BufferedInputStream bis = new BufferedInputStream(is, STREAM_BUFFER_SIZE);
+                BufferedOutputStream bos = new BufferedOutputStream(os, STREAM_BUFFER_SIZE)
+        ) {
+            bis.transferTo(bos);
+        }
+        // Генерируем превью для БД
+        byte[] previewData = generatePreviewData(filePath);
 
-        // Сохраняем файл на диск
-        Files.write(filePath, file.getBytes());
-
-        // Создаем превью
-        byte[] preview = generatePreview(file);
-
-        // Создаем или обновляем аватар
-        Avatar avatar = avatarRepository.findByStudentId(studentId).orElse(new Avatar());
+        Avatar avatar = findOrCreateAvatar(studentId);
         avatar.setStudent(student);
         avatar.setFilePath(filePath.toString());
-        avatar.setFileSize(file.getSize());
-        avatar.setMediaType(file.getContentType());
-        avatar.setData(preview); // Сохраняем превью в БД
+        avatar.setFileSize(avatarFile.getSize());
+        avatar.setMediaType(avatarFile.getContentType());
+        avatar.setData(previewData); // Сохраняем ПРЕВЬЮ в БД, а не оригинал
 
-        return avatarRepository.save(avatar);
+        avatarRepository.save(avatar);
     }
 
-    public byte[] getAvatarFromDb(Long studentId) {
-        Avatar avatar = avatarRepository.findByStudentId(studentId)
-                .orElseThrow(() -> new RuntimeException("Avatar not found in database"));
-        return avatar.getData();
-    }
+    /**
+     * Генерирует уменьшенное превью изображения для хранения в БД
+     */
+    private byte[] generatePreviewData(Path filePath) throws IOException {
+        try (
+                InputStream is = Files.newInputStream(filePath);
+                BufferedInputStream bis = new BufferedInputStream(is,STREAM_BUFFER_SIZE);
+                ByteArrayOutputStream baos = new ByteArrayOutputStream()
+            ){
+                 // Читаем оригинальное изображение
+                BufferedImage originalImage = ImageIO.read(bis);
 
-    public byte[] getAvatarFromDisk(Long studentId) throws IOException {
-        Avatar avatar = avatarRepository.findByStudentId(studentId)
-                .orElseThrow(() -> new RuntimeException("Avatar not found"));
+                if (originalImage == null) {
+                // Если это не изображение, возвращаем пустой массив
+                return new byte[0];
+                }
 
-        Path filePath = Path.of(avatar.getFilePath());
-        if (!Files.exists(filePath)) {
-            throw new RuntimeException("File not found on disk: " + filePath);
-        }
+            // Рассчитываем высоту пропорционально ширине
+            int originalWidth = originalImage.getWidth();
+            int originalHeight = originalImage.getHeight();
 
-        return Files.readAllBytes(filePath);
-    }
-
-    private void createAvatarsDirectory() {
-        try {
-            Files.createDirectories(Path.of(avatarsDirectory));
-            System.out.println("Avatars directory created: " + avatarsDirectory);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to create avatars directory: " + avatarsDirectory, e);
-        }
-    }
-
-    private String getFileExtension(String filename) {
-        if (filename == null || !filename.contains(".")) {
-            return ".jpg";
-        }
-        return filename.substring(filename.lastIndexOf("."));
-    }
-
-    private byte[] generatePreview(MultipartFile file) throws IOException {
-        try (InputStream is = file.getInputStream()) {
-            BufferedImage originalImage = ImageIO.read(is);
-            if (originalImage == null) {
-                return file.getBytes(); // Если не изображение, возвращаем оригинал
+            // Защита от деления на ноль
+            if (originalWidth == 0) {
+                return new byte[0];
             }
 
-            // Создаем превью 100x100
-            BufferedImage previewImage = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
+            int previewHeight = originalHeight * PREVIEW_WIDTH / originalWidth;
+
+            // Создаем превью
+            BufferedImage previewImage = new BufferedImage(
+                    PREVIEW_WIDTH,
+                    previewHeight,
+                    originalImage.getType()
+
+            );
+
+            // Масштабируем изображение
             Graphics2D graphics = previewImage.createGraphics();
-            graphics.drawImage(originalImage, 0, 0, 100, 100, null);
+            graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+            graphics.drawImage(originalImage, 0, 0, PREVIEW_WIDTH, previewHeight, null);
             graphics.dispose();
 
-            // Конвертируем в byte[]
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ImageIO.write(previewImage, "jpg", baos);
+            // Сохраняем превью в байтовый массив
+            String formatName = getExtensions(filePath.getFileName().toString());
+            ImageIO.write(previewImage, formatName, baos);
+
             return baos.toByteArray();
         }
     }
+
+    public Avatar findAvatar(Long studentId) {
+        return avatarRepository.findByStudentId(studentId)
+                .orElseThrow(() -> new RuntimeException("Avatar not found for student id: " + studentId));
+    }
+
+    public byte[] getAvatarDataFromDatabase(Long studentId) {
+        Avatar avatar = findAvatar(studentId);
+        return avatar.getData(); // Возвращаем превью из БД
+    }
+
+    public Avatar getAvatarFromDisk(Long studentId) throws IOException {
+        Avatar avatar = findAvatar(studentId);
+        Path path = Path.of(avatar.getFilePath());
+
+        if (!Files.exists(path)) {
+            throw new IOException("Avatar file not found on disk: " + path);
+        }
+
+        return avatar;
+    }
+
+    public void deleteAvatar(Long studentId) throws IOException {
+        Avatar avatar = findAvatar(studentId);
+        Path filePath = Path.of(avatar.getFilePath());
+
+        Files.deleteIfExists(filePath);
+        avatarRepository.delete(avatar);
+    }
+
+    private Avatar findOrCreateAvatar(Long studentId) {
+        return avatarRepository.findByStudentId(studentId)
+                .orElse(new Avatar());
+    }
+
+    private String getExtensions(String fileName) {
+        if (fileName == null || !fileName.contains(".")) {
+            return "";
+        }
+        return fileName.substring(fileName.lastIndexOf(".") + 1);
+    }
 }
+
