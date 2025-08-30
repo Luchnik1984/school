@@ -55,13 +55,13 @@ public class Student {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Student student = (Student) o;
-        return Objects.equals(id, student.id); // Сравниваем только по id
+        return Objects.equals(id, student.id)&&
+                Objects.equals(name, student.name);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id); // Хеш-код на основе id
-    }
+        return Objects.hash(id, name); }
 
     @Override
     public String toString() {
