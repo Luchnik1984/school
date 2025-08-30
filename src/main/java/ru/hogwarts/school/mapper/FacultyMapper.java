@@ -6,6 +6,7 @@ import ru.hogwarts.school.dto.FacultyWithoutStudents;
 import ru.hogwarts.school.dto.StudentWithoutFaculty;
 import ru.hogwarts.school.model.Faculty;
 
+import java.util.Collections;
 import java.util.stream.Collectors;
 
 @Component
@@ -16,11 +17,13 @@ public class FacultyMapper {
                 faculty.getId(),
                 faculty.getName(),
                 faculty.getColor(),
-                faculty.getStudents().stream()
-                        .map(student -> new StudentWithoutFaculty(
-                                student.getId(),
-                                student.getName()))
-                        .collect(Collectors.toList())
+                faculty.getStudents() != null ?
+                        faculty.getStudents().stream()
+                                .map(student -> new StudentWithoutFaculty(
+                                        student.getId(),
+                                        student.getName()))
+                                .collect(Collectors.toList())
+                        : Collections.emptyList()
         );
     }
 
