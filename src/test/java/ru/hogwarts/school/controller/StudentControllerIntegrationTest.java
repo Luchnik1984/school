@@ -19,14 +19,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-
 class StudentControllerIntegrationTest {
     @LocalServerPort
     private int port;
     private String baseUrl;
 
     private final String testName = "testName";
-    private final int testAge=11;
+    private final int testAge = 11;
     private final String updatedName = "udatedName";
     private final int updatedAge = 7;
 
@@ -37,14 +36,14 @@ class StudentControllerIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        baseUrl = "http://localhost:" + port+"/students";
+        baseUrl = "http://localhost:" + port + "/students";
         studentRepository.deleteAll();
     }
 
     @Test
     void testAddStudent() {
         // ПРОВЕРКА: База пуста перед тестом
-        Assertions.assertTrue(studentRepository.findAll().isEmpty(),"База должна быть пустой");
+        Assertions.assertTrue(studentRepository.findAll().isEmpty(), "База должна быть пустой");
 
         // Подготовка данных
         Student student = new Student();
@@ -74,7 +73,7 @@ class StudentControllerIntegrationTest {
     @Test
     void testGetStudentById() {
         // ПРОВЕРКА: База пуста перед тестом
-        Assertions.assertTrue(studentRepository.findAll().isEmpty(),"База должна быть пустой");
+        Assertions.assertTrue(studentRepository.findAll().isEmpty(), "База должна быть пустой");
 
         // Подготовка данных
         Student student = new Student();
@@ -115,7 +114,7 @@ class StudentControllerIntegrationTest {
     @Test
     void testUpdateStudent() {
         // ПРОВЕРКА: База пуста перед тестом
-        Assertions.assertTrue(studentRepository.findAll().isEmpty(),"База должна быть пустой");
+        Assertions.assertTrue(studentRepository.findAll().isEmpty(), "База должна быть пустой");
 
         // ПОДГОТОВКА: Добавляем студента
         Student student = new Student();
@@ -162,7 +161,7 @@ class StudentControllerIntegrationTest {
     @Test
     void testDeleteStudent() {
         // ПРОВЕРКА: База пуста перед тестом
-        Assertions.assertTrue(studentRepository.findAll().isEmpty(),"База должна быть пустой");
+        Assertions.assertTrue(studentRepository.findAll().isEmpty(), "База должна быть пустой");
 
         // ПОДГОТОВКА: Добавляем студента
         Student student = new Student();
