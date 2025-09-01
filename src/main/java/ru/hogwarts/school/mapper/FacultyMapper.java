@@ -1,5 +1,6 @@
 package ru.hogwarts.school.mapper;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.hogwarts.school.dto.FacultyWithStudents;
 import ru.hogwarts.school.dto.FacultyWithoutStudents;
@@ -11,6 +12,13 @@ import java.util.stream.Collectors;
 
 @Component
 public class FacultyMapper {
+    private final StudentMapper studentMapper;
+
+    @Autowired
+    public FacultyMapper(StudentMapper studentMapper) {
+        this.studentMapper = studentMapper;
+    }
+
     public FacultyWithStudents toFacultyWithStudents(Faculty faculty) {
 
         return new FacultyWithStudents(
@@ -19,15 +27,16 @@ public class FacultyMapper {
                 faculty.getColor(),
                 faculty.getStudents() != null ?
                         faculty.getStudents().stream()
-                                .map(student -> new StudentWithoutFaculty(
-                                        student.getId(),
-                                        student.getName()))
+                                .map(studentMapper::toStudentWithoutFaculty)
                                 .collect(Collectors.toList())
                         : Collections.emptyList()
         );
     }
 
     public FacultyWithoutStudents toFacultyWithoutStudents(Faculty faculty) {
+        if (faculty==null) {
+            return null;
+        }
         return new FacultyWithoutStudents(
                 faculty.getId(),
                 faculty.getName(),

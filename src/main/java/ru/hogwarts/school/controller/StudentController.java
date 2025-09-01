@@ -9,6 +9,7 @@ import ru.hogwarts.school.dto.FacultyWithoutStudents;
 import ru.hogwarts.school.dto.StudentWithFaculty;
 import ru.hogwarts.school.dto.StudentWithoutFaculty;
 import ru.hogwarts.school.mapper.StudentMapper;
+import ru.hogwarts.school.mapper.FacultyMapper;
 import ru.hogwarts.school.model.Faculty;
 import ru.hogwarts.school.model.Student;
 import ru.hogwarts.school.service.StudentService;
@@ -17,17 +18,20 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 
 
+
 @RestController
 @RequestMapping("/students")
 @Tag(name = "Student Controller", description = "Управление студентами")
 public class StudentController {
     private final StudentService service;
     private final StudentMapper mapper;
+    private final FacultyMapper facultyMapper;
 
 
-    public StudentController(StudentService service, StudentMapper mapper) {
+    public StudentController(StudentService service, StudentMapper mapper, FacultyMapper facultyMapper) {
         this.service = service;
         this.mapper = mapper;
+        this.facultyMapper = facultyMapper;
     }
 
     @Operation(summary = "Добавить студента")
@@ -112,10 +116,7 @@ public class StudentController {
         if (faculty == null) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(new FacultyWithoutStudents(
-                faculty.getId(),
-                faculty.getName(),
-                faculty.getColor()));
+        return ResponseEntity.ok(facultyMapper.toFacultyWithoutStudents(faculty));
     }
 
 }

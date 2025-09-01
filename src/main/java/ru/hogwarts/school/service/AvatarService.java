@@ -16,6 +16,7 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.awt.RenderingHints;
 
 import static java.nio.file.StandardOpenOption.CREATE_NEW;
 
