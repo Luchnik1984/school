@@ -11,8 +11,12 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.data.domain.Page;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import ru.hogwarts.school.model.Avatar;
 import ru.hogwarts.school.service.AvatarService;
+import ru.hogwarts.school.dto.AvatarInfo;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -123,6 +127,48 @@ public class AvatarController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("Avatar not found: " + e.getMessage());
         }
+    }
+
+    @Operation(summary = "Получить аватары с пагинацией")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Страница с аватарами"),
+            @ApiResponse(responseCode = "400", description = "Неверные параметры пагинации")
+    })
+    @GetMapping("/page")
+    public ResponseEntity<Page<AvatarInfo>> getAvatarsPage(
+            @Parameter(description = "Номер страницы (начинается с 0)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+
+            @Parameter(description = "Размер страницы", example = "3")
+            @RequestParam(defaultValue = "3") int size) {
+
+        if (page < 0 || size <= 0) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        Page<AvatarInfo> avatarsPage = avatarService.getAvatarsInfo(page, size);
+        return ResponseEntity.ok(avatarsPage);
+    }
+
+    @Operation(summary = "Получить все аватары с данными файлов (осторожно: большие данные)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Страница с аватарами"),
+            @ApiResponse(responseCode = "400", description = "Неверные параметры пагинации")
+    })
+    @GetMapping("/page-with-data")
+    public ResponseEntity<Page<Avatar>> getAvatarsWithData(
+            @Parameter(description = "Номер страницы (начинается с 0)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+
+            @Parameter(description = "Размер страницы", example = "3")
+            @RequestParam(defaultValue = "3") int size) {
+
+        if (page < 0 || size <= 0) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        Page<Avatar> avatarsPage = avatarService.getAllAvatarsWithPagination(page, size);
+        return ResponseEntity.ok(avatarsPage);
     }
 }
 
