@@ -1,14 +1,18 @@
 package ru.hogwarts.school.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import ru.hogwarts.school.dto.AvatarInfo;
+import ru.hogwarts.school.mapper.AvatarMapper;
 import ru.hogwarts.school.model.Avatar;
 import ru.hogwarts.school.model.Student;
 import ru.hogwarts.school.repository.AvatarRepository;
 import ru.hogwarts.school.repository.StudentRepository;
-
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -25,6 +29,7 @@ import static java.nio.file.StandardOpenOption.CREATE_NEW;
 public class AvatarService {
     private final AvatarRepository avatarRepository;
     private final StudentRepository studentRepository;
+    private final AvatarMapper avatarMapper;
 
     @Value("${avatar.directory.path}")
     private String avatarsDir;
@@ -33,9 +38,10 @@ public class AvatarService {
     private static final int PREVIEW_WIDTH = 100;
     private static final int STREAM_BUFFER_SIZE = 1024;
 
-    public AvatarService(AvatarRepository avatarRepository, StudentRepository studentRepository) {
+    public AvatarService(AvatarRepository avatarRepository, StudentRepository studentRepository, AvatarMapper avatarMapper) {
         this.avatarRepository = avatarRepository;
         this.studentRepository = studentRepository;
+        this.avatarMapper = avatarMapper;
     }
 
     public void uploadAvatar(Long studentId, MultipartFile avatarFile) throws IOException {
@@ -157,5 +163,21 @@ public class AvatarService {
         }
         return fileName.substring(fileName.lastIndexOf(".") + 1);
     }
+
+    // Метод для получения информации об аватарах (без данных файлов)
+    public Page<AvatarInfo> getAvatarsInfo(int pageNumber, int pageSize) {
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        Page<Avatar> avatarsPage = avatarRepository.findAll(pageable);
+
+        return avatarsPage.map(avatar -> new AvatarInfo(
+                avatar.getId(),
+                avatar.getStudent().getId(),
+                avatar.getStudent().getName(),
+                avatar.getFilePath(),
+                avatar.getFileSize(),
+                avatar.getMediaType()
+        ));
+    }
 }
+
 
