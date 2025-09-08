@@ -129,46 +129,26 @@ public class AvatarController {
         }
     }
 
-    @Operation(summary = "Получить аватары с пагинацией")
+    @Operation(summary = "Получить информацию об аватарах с пагинацией")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Страница с аватарами"),
+            @ApiResponse(responseCode = "200", description = "Страница с информацией об аватарах"),
             @ApiResponse(responseCode = "400", description = "Неверные параметры пагинации")
     })
     @GetMapping("/page")
     public ResponseEntity<Page<AvatarInfo>> getAvatarsPage(
-            @Parameter(description = "Номер страницы (начинается с 0)", example = "0")
-            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Номер страницы (начинается с 1)", example = "1")
+            @RequestParam(defaultValue = "1") Integer page,
 
             @Parameter(description = "Размер страницы", example = "3")
-            @RequestParam(defaultValue = "3") int size) {
+            @RequestParam(defaultValue = "3") Integer size) {
 
-        if (page < 0 || size <= 0) {
+        if (page < 1 || size <= 0) {
             return ResponseEntity.badRequest().build();
         }
 
-        Page<AvatarInfo> avatarsPage = avatarService.getAvatarsInfo(page, size);
+        Page<AvatarInfo> avatarsPage = avatarService.getAvatarsInfo(page-1, size);
         return ResponseEntity.ok(avatarsPage);
     }
 
-    @Operation(summary = "Получить все аватары с данными файлов (осторожно: большие данные)")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Страница с аватарами"),
-            @ApiResponse(responseCode = "400", description = "Неверные параметры пагинации")
-    })
-    @GetMapping("/page-with-data")
-    public ResponseEntity<Page<Avatar>> getAvatarsWithData(
-            @Parameter(description = "Номер страницы (начинается с 0)", example = "0")
-            @RequestParam(defaultValue = "0") int page,
-
-            @Parameter(description = "Размер страницы", example = "3")
-            @RequestParam(defaultValue = "3") int size) {
-
-        if (page < 0 || size <= 0) {
-            return ResponseEntity.badRequest().build();
-        }
-
-        Page<Avatar> avatarsPage = avatarService.getAllAvatarsWithPagination(page, size);
-        return ResponseEntity.ok(avatarsPage);
-    }
 }
 

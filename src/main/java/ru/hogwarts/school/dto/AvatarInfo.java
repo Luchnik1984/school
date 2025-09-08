@@ -1,5 +1,7 @@
 package ru.hogwarts.school.dto;
 
+import java.util.Objects;
+
 public class AvatarInfo {
     private Long id;
     private Long studentId;
@@ -16,6 +18,10 @@ public class AvatarInfo {
         this.filePath = filePath;
         this.fileSize = fileSize;
         this.mediaType = mediaType;
+    }
+
+    public AvatarInfo() {
+
     }
 
 
@@ -49,5 +55,37 @@ public class AvatarInfo {
     public void setMediaType(String mediaType) {
         this.mediaType = mediaType;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AvatarInfo that = (AvatarInfo) o;
+        return fileSize == that.fileSize &&
+                Objects.equals(id, that.id) &&
+                Objects.equals(filePath, that.filePath) &&
+                Objects.equals(mediaType, that.mediaType) &&
+                Objects.equals(studentId, that.studentId) &&
+                Objects.equals(studentName, that.studentName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, filePath, fileSize, mediaType, studentId, studentName);
+    }
+
+    // toString для удобства отладки
+    @Override
+    public String toString() {
+        return "AvatarInfo{" +
+                "id=" + id +
+                ", filePath='" + filePath + '\'' +
+                ", fileSize=" + fileSize +
+                ", mediaType='" + mediaType + '\'' +
+                ", studentId=" + studentId +
+                ", studentName='" + studentName + '\'' +
+                '}';
+    }
+
 }
 
