@@ -5,7 +5,7 @@
 -- Возраст студента не может быть меньше 16 лет
 ALTER TABLE student
     ADD CONSTRAINT age_chek
-        CHECK ( age>=16 );
+        CHECK ( age>=14 );
 
 -- Имена студентов должны быть уникальными и не равны нулю
 ALTER TABLE student

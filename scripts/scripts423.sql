@@ -18,5 +18,5 @@ SELECT
     a.file_path AS avatar_path
 FROM student s
 LEFT JOIN faculty f ON s.faculty_id = f.id
-INNER JOIN avatar a ON s.id = a.student.id
+INNER JOIN avatars a ON s.id = a.student_id
 ORDER BY s.name;
