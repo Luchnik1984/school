@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import ru.hogwarts.school.dto.AvatarInfo;
 import ru.hogwarts.school.mapper.AvatarMapper;
@@ -158,10 +159,7 @@ public class AvatarService {
     }
 
     private String getExtensions(String fileName) {
-        if (fileName == null || !fileName.contains(".")) {
-            return "";
-        }
-        return fileName.substring(fileName.lastIndexOf(".") + 1);
+        return StringUtils.getFilenameExtension(fileName);
     }
 
     // Метод для получения информации об аватарах (без данных файлов)
