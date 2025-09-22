@@ -9,6 +9,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.*;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import ru.hogwarts.school.dto.FacultyWithoutStudents;
 import ru.hogwarts.school.dto.StudentWithFaculty;
 import ru.hogwarts.school.dto.StudentWithoutFaculty;
@@ -18,6 +19,7 @@ import ru.hogwarts.school.repository.StudentRepository;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class StudentControllerIntegrationTest {
     @LocalServerPort

@@ -15,6 +15,7 @@ import ru.hogwarts.school.model.Student;
 import ru.hogwarts.school.service.StudentService;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 
 
@@ -119,4 +120,27 @@ public class StudentController {
         return ResponseEntity.ok(facultyMapper.toFacultyWithoutStudents(faculty));
     }
 
+    @Operation (summary = "Получить общее количество студентов")
+    @GetMapping("/count")
+    public ResponseEntity<Integer> getTotalStudentsCount() {
+        Integer count = service.getTotalCount();
+        return ResponseEntity.ok(count);
+    }
+
+    @Operation (summary = "Получить средний возраст студентов")
+    @GetMapping ("/average-age")
+    public ResponseEntity<Double> getAverageAge() {
+        Double averageAge = service.getAverageAge();
+        return ResponseEntity.ok(averageAge);
+    }
+
+    @Operation (summary = "Получить 5 последних студентов")
+    @GetMapping("/last-five")
+    public ResponseEntity<List<StudentWithFaculty>> getLastFiveStudents() {
+       List<Student> students = service.getLastFiveStudents();
+       List<StudentWithFaculty> result = students.stream()
+               .map(mapper::toStudentWithFaculty)
+               .collect(Collectors.toList());
+       return ResponseEntity.ok(result);
+    }
 }
