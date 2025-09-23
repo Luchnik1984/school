@@ -3,6 +3,8 @@ package ru.hogwarts.school.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.hogwarts.school.dto.FacultyWithStudents;
@@ -25,6 +27,7 @@ public class FacultyController {
     private final FacultyService service;
     private final FacultyMapper facultyMapper;
     private final StudentMapper studentMapper;
+    private final Logger logger = LoggerFactory.getLogger(FacultyController.class);
 
 
     public FacultyController(FacultyService service, FacultyMapper facultyMapper, StudentMapper studentMapper) {
@@ -117,6 +120,21 @@ public class FacultyController {
         return ResponseEntity.ok(students.stream()
                 .map(studentMapper::toStudentWithoutFaculty)
                 .collect(Collectors.toList()));
+    }
+
+    @Operation (summary = "Получить самое длинное название факультета")
+    @GetMapping("/longest-name")
+    public ResponseEntity<String> getFacultyNameByLongestName() {
+        logger.info("Was invoked method for get faculty name by longest name");
+
+        String longestName = service.getFacultyWithLongestName();
+
+        if (longestName == null) {
+            logger.warn("No faculty with valid name found");
+            return ResponseEntity.notFound().build();
+        }
+        logger.debug("Returning longest faculty name {}", longestName);
+        return ResponseEntity.ok(longestName);
     }
 
 }

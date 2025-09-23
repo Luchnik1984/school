@@ -8,8 +8,7 @@ import ru.hogwarts.school.model.Student;
 import ru.hogwarts.school.repository.FacultyRepository;
 import ru.hogwarts.school.repository.StudentRepository;
 
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class FacultyService {
@@ -85,5 +84,32 @@ public class FacultyService {
         List<Student> students = studentRepository.findByFacultyId(facultyId);
         logger.debug("Found {} students for faculty id {}", students.size(), facultyId);
         return students;
+    }
+
+    public String getFacultyWithLongestName() {
+        logger.info("Was invoked method for get faculty with longest name");
+        List<Faculty> allFaculties = new ArrayList<>(facultyRepository.findAll());
+        logger.debug("Found {} total faculties in database", allFaculties.size());
+
+        if (allFaculties.isEmpty()) {
+            logger.warn("No faculties found");
+            return null;
+        }
+
+        Optional<String> longestName = allFaculties.stream()
+                .map(Faculty::getName)
+                .filter(Objects::nonNull)
+                .filter(name -> !name.trim().isEmpty())
+                .max(Comparator.comparingInt(String::length));
+
+        if (longestName.isPresent()) {
+            String result = longestName.get();
+            logger.info("Found faculty with longest name: '{}' (length: {})",
+                    result, result.length());
+            return result;
+        }
+
+        logger.warn("No valid faculty names found");
+        return null;
     }
 }
