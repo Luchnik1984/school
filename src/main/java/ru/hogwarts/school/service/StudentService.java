@@ -10,6 +10,8 @@ import ru.hogwarts.school.repository.StudentRepository;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.Objects;
 
 
 @Service
@@ -115,4 +117,40 @@ public class StudentService {
         logger.debug("Found {} last students", students.size());
         return students;
     }
+
+    public List<String> getStudentNamesStartingWithLetter(String letter) {
+        logger.info("Was invoked method for get student names starting with letter{}", letter);
+
+        if (letter == null || letter.trim().isEmpty()) {
+            logger.warn("Invalid letter parameter: '{}'. Using default latin letter 'A'", letter);
+            letter = "A"; // Значение по умолчанию (латиница)
+        }
+
+        // Если передадут строку, ищем по первой букве
+        String searchLetter = letter.trim().toUpperCase().substring(0, 1);
+        logger.debug("Searching for names starting with letter {}", searchLetter);
+
+        List<Student>allStudents = studentRepository.findAll();
+        logger.debug("Found {} students in database", allStudents.size());
+
+        List<String> result = allStudents.stream()
+                .map(Student::getName)
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(name->!name.isEmpty())
+                .map(String::toUpperCase)
+                .filter(name ->name.startsWith(searchLetter))
+                .sorted()
+                .collect(Collectors.toList());
+
+        logger.debug("Found {} students with names starting with letter {}", result.size(), searchLetter);
+
+        if (result.isEmpty()){
+            logger.warn("No students found with names starting with letter {}", searchLetter);
+        } else {
+            logger.info("Student names starting with {}: {}", searchLetter, result);
+        }
+        return result;
+    }
+
 }
