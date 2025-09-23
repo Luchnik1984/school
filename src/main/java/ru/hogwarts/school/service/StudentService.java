@@ -9,6 +9,7 @@ import ru.hogwarts.school.repository.FacultyRepository;
 import ru.hogwarts.school.repository.StudentRepository;
 
 import java.util.Collection;
+import java.util.DoubleSummaryStatistics;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.Objects;
@@ -151,6 +152,27 @@ public class StudentService {
             logger.info("Student names starting with {}: {}", searchLetter, result);
         }
         return result;
+    }
+
+    public Double getAverageAgeOfAllStudents(){
+        logger.info("Was invoked method for get average age of all students");
+
+        List<Student>allStudents = studentRepository.findAll();
+        logger.debug("Found {} students", allStudents.size());
+
+        if (allStudents.isEmpty()){
+            logger.warn("No students found - can't calculate average age of all students");
+            return 0.0;
+        }
+        DoubleSummaryStatistics stats = allStudents.stream()
+                .mapToDouble(Student::getAge)
+                .summaryStatistics();
+
+        double averageAge = stats.getAverage();
+        logger.info("Age statistics - count: {}, average: {}, Min: {}, Max: {}",
+                stats.getCount(), averageAge, stats.getMin(), stats.getMax());
+
+        return averageAge;
     }
 
 }

@@ -164,4 +164,17 @@ public class StudentController {
         logger.debug("Returning {} student names starting with {}", studentNames.size(), letter);
         return ResponseEntity.ok(studentNames);
     }
+
+    @Operation (summary = "Получить средний возраст всех студентов")
+    @GetMapping("/average-age-all")
+    public ResponseEntity<Double> getAverageAgeOfAllStudents() {
+        logger.info("Was invoked endpoint for get average age of all students");
+        Double averageAge = service.getAverageAgeOfAllStudents();
+
+        if (averageAge == 0.0){
+            logger.warn("Average age is 0 - possibly no students in the database");
+        }
+        logger.debug("Returning average age: {}", averageAge);
+        return ResponseEntity.ok(averageAge);
+    }
 }
