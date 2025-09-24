@@ -3,6 +3,8 @@ package ru.hogwarts.school.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.hogwarts.school.dto.FacultyWithoutStudents;
@@ -15,6 +17,7 @@ import ru.hogwarts.school.model.Student;
 import ru.hogwarts.school.service.StudentService;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 
 
@@ -26,6 +29,7 @@ public class StudentController {
     private final StudentService service;
     private final StudentMapper mapper;
     private final FacultyMapper facultyMapper;
+    private final Logger logger = LoggerFactory.getLogger(StudentController.class);
 
 
     public StudentController(StudentService service, StudentMapper mapper, FacultyMapper facultyMapper) {
@@ -119,4 +123,58 @@ public class StudentController {
         return ResponseEntity.ok(facultyMapper.toFacultyWithoutStudents(faculty));
     }
 
+    @Operation (summary = "Получить общее количество студентов")
+    @GetMapping("/count")
+    public ResponseEntity<Integer> getTotalStudentsCount() {
+        Integer count = service.getTotalCount();
+        return ResponseEntity.ok(count);
+    }
+
+    @Operation (summary = "Получить средний возраст студентов")
+    @GetMapping ("/average-age")
+    public ResponseEntity<Double> getAverageAge() {
+        Double averageAge = service.getAverageAge();
+        return ResponseEntity.ok(averageAge);
+    }
+
+    @Operation (summary = "Получить 5 последних студентов")
+    @GetMapping("/last-five")
+    public ResponseEntity<List<StudentWithFaculty>> getLastFiveStudents() {
+       List<Student> students = service.getLastFiveStudents();
+       List<StudentWithFaculty> result = students.stream()
+               .map(mapper::toStudentWithFaculty)
+               .collect(Collectors.toList());
+       return ResponseEntity.ok(result);
+    }
+
+    @Operation(summary = "Получить имена студентов, начинающиеся на указанную букву")
+    @GetMapping("/names-starting-with")
+    public ResponseEntity<List<String>> getNamesStartingWithLetter(
+        @Parameter(description = "Буква для поиска (по умолчанию - A латинская)")
+        @RequestParam(defaultValue = "A") String letter){
+
+        logger.info("Was invoked endpoint for get student names starting with letter: {}", letter);
+        List<String> studentNames = service.getStudentNamesStartingWithLetter(letter);
+
+        if (studentNames.isEmpty()){
+            logger.warn("No students found with names starting with letter: {}", letter);
+            return ResponseEntity.notFound().build();
+        }
+
+        logger.debug("Returning {} student names starting with {}", studentNames.size(), letter);
+        return ResponseEntity.ok(studentNames);
+    }
+
+    @Operation (summary = "Получить средний возраст всех студентов")
+    @GetMapping("/average-age-all")
+    public ResponseEntity<Double> getAverageAgeOfAllStudents() {
+        logger.info("Was invoked endpoint for get average age of all students");
+        Double averageAge = service.getAverageAgeOfAllStudents();
+
+        if (averageAge == 0.0){
+            logger.warn("Average age is 0 - possibly no students in the database");
+        }
+        logger.debug("Returning average age: {}", averageAge);
+        return ResponseEntity.ok(averageAge);
+    }
 }
