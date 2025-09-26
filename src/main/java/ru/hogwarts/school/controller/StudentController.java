@@ -16,10 +16,8 @@ import ru.hogwarts.school.model.Faculty;
 import ru.hogwarts.school.model.Student;
 import ru.hogwarts.school.service.StudentService;
 
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
-
 
 
 @RestController
@@ -123,40 +121,40 @@ public class StudentController {
         return ResponseEntity.ok(facultyMapper.toFacultyWithoutStudents(faculty));
     }
 
-    @Operation (summary = "Получить общее количество студентов")
+    @Operation(summary = "Получить общее количество студентов")
     @GetMapping("/count")
     public ResponseEntity<Integer> getTotalStudentsCount() {
         Integer count = service.getTotalCount();
         return ResponseEntity.ok(count);
     }
 
-    @Operation (summary = "Получить средний возраст студентов")
-    @GetMapping ("/average-age")
+    @Operation(summary = "Получить средний возраст студентов")
+    @GetMapping("/average-age")
     public ResponseEntity<Double> getAverageAge() {
         Double averageAge = service.getAverageAge();
         return ResponseEntity.ok(averageAge);
     }
 
-    @Operation (summary = "Получить 5 последних студентов")
+    @Operation(summary = "Получить 5 последних студентов")
     @GetMapping("/last-five")
     public ResponseEntity<List<StudentWithFaculty>> getLastFiveStudents() {
-       List<Student> students = service.getLastFiveStudents();
-       List<StudentWithFaculty> result = students.stream()
-               .map(mapper::toStudentWithFaculty)
-               .collect(Collectors.toList());
-       return ResponseEntity.ok(result);
+        List<Student> students = service.getLastFiveStudents();
+        List<StudentWithFaculty> result = students.stream()
+                .map(mapper::toStudentWithFaculty)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(result);
     }
 
     @Operation(summary = "Получить имена студентов, начинающиеся на указанную букву")
     @GetMapping("/names-starting-with")
     public ResponseEntity<List<String>> getNamesStartingWithLetter(
-        @Parameter(description = "Буква для поиска (по умолчанию - A латинская)")
-        @RequestParam(defaultValue = "A") String letter){
+            @Parameter(description = "Буква для поиска (по умолчанию - A латинская)")
+            @RequestParam(defaultValue = "A") String letter) {
 
         logger.info("Was invoked endpoint for get student names starting with letter: {}", letter);
         List<String> studentNames = service.getStudentNamesStartingWithLetter(letter);
 
-        if (studentNames.isEmpty()){
+        if (studentNames.isEmpty()) {
             logger.warn("No students found with names starting with letter: {}", letter);
             return ResponseEntity.notFound().build();
         }
@@ -165,16 +163,59 @@ public class StudentController {
         return ResponseEntity.ok(studentNames);
     }
 
-    @Operation (summary = "Получить средний возраст всех студентов")
+    @Operation(summary = "Получить средний возраст всех студентов")
     @GetMapping("/average-age-all")
     public ResponseEntity<Double> getAverageAgeOfAllStudents() {
         logger.info("Was invoked endpoint for get average age of all students");
         Double averageAge = service.getAverageAgeOfAllStudents();
 
-        if (averageAge == 0.0){
+        if (averageAge == 0.0) {
             logger.warn("Average age is 0 - possibly no students in the database");
         }
         logger.debug("Returning average age: {}", averageAge);
         return ResponseEntity.ok(averageAge);
     }
+
+    @Operation(summary = "Вывести имена студентов в параллельных потоках")
+    @GetMapping("/print-parallel")
+    public ResponseEntity<Map<String, Object>> printStudentNamesInParallel() {
+        logger.info("Was invoked endpoint for print student names in parallel with info");
+
+        List<String> studentNames = service.getStudentNamesForParallelPrinting();
+
+        if (studentNames.isEmpty()) {
+            logger.warn("No students found for parallel printing");
+            return ResponseEntity.ok(createSimpleResponse());
+        }
+
+        Map<String, Object> printInfo = service.printStudentNamesInParallelWithInfo(studentNames);
+
+        // добавляем всю информацию из printInfo в ответ
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Student names printed in parallel successfully");
+        response.put("total_students", studentNames.size());
+        response.put("printed_students", Math.min(studentNames.size(), 6));
+        response.put("status", "success");
+        response.putAll(printInfo); // Добавляем все данные из сервиса
+
+        logger.info("Parallel printing completed successfully with {} threads",
+                printInfo.get("threads_count"));
+        return ResponseEntity.ok(response);
+    }
+
+
+    /**
+     * Создает простой ответ (для случая без студентов)
+     */
+    private Map<String, Object> createSimpleResponse() {
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "No students found");
+        response.put("total_students", 0);
+        response.put("printed_students", 0);
+        response.put("status", "success");
+        response.put("print_results", Collections.emptyList());
+        return response;
+    }
+
 }
+

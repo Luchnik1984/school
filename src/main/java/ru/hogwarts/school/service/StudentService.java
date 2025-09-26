@@ -8,11 +8,8 @@ import ru.hogwarts.school.model.Student;
 import ru.hogwarts.school.repository.FacultyRepository;
 import ru.hogwarts.school.repository.StudentRepository;
 
-import java.util.Collection;
-import java.util.DoubleSummaryStatistics;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
-import java.util.Objects;
 
 
 @Service
@@ -175,4 +172,130 @@ public class StudentService {
         return averageAge;
     }
 
+    /**
+     * Получить имена студентов для параллельного вывода
+     */
+    public List<String> getStudentNamesForParallelPrinting() {
+        logger.info("Was invoked method for get student names for parallel printing");
+
+        List<Student> allStudents = studentRepository.findAll();
+        logger.debug("Found {} total students in database", allStudents.size());
+
+        List<String> studentNames = allStudents.stream()
+                .map(Student::getName)
+                .filter(Objects::nonNull)
+                .filter(name -> !name.trim().isEmpty())
+                .collect(Collectors.toList());
+
+        logger.debug("Student names for parallel printing: {}", studentNames);
+        return studentNames;
+    }
+
+    /**
+     *  Гибкий метод для параллельного вывода имен студентов
+     */
+    public Map<String, Object> printStudentNamesInParallelWithInfo(List<String> studentNames) {
+        logger.info("Printing {} student names in parallel with info collection", studentNames.size());
+
+        int totalStudents = studentNames.size();
+        Map<String, Object> result = new LinkedHashMap<>();
+        List<Map<String, String>> printResults = new ArrayList<>(); // Убрали synchronizedList
+
+        result.put("total_students", totalStudents);
+        result.put("printed_students", Math.min(totalStudents, 6));
+
+        // Всегда выводим первых двух студентов в основном потоке (если они есть)
+        printInMainThreadWithInfo(studentNames, totalStudents, printResults);
+
+        // Создаем и запускаем параллельные потоки
+        List<Thread> threads = createParallelThreadsWithInfo(studentNames, totalStudents, printResults);
+        startAndWaitThreads(threads);
+
+        result.put("print_results", printResults);
+        result.put("threads_count", threads.size() + 1); // +1 для основного потока
+
+        logger.info("Parallel printing completed for {} students", totalStudents);
+        return result;
+    }
+
+    private void printInMainThreadWithInfo(List<String> studentNames, int totalStudents,
+                                           List<Map<String, String>> printResults) {
+        if (totalStudents >= 1) {
+            String message = "Main thread - Student 1: " + studentNames.get(0);
+            System.out.println(message);
+            addPrintResult(printResults, "main", 1, studentNames.get(0), message);
+        }
+        if (totalStudents >= 2) {
+            String message = "Main thread - Student 2: " + studentNames.get(1);
+            System.out.println(message);
+            addPrintResult(printResults, "main", 2, studentNames.get(1), message);
+        }
+    }
+
+    private List<Thread> createParallelThreadsWithInfo(List<String> studentNames, int totalStudents,
+                                                       List<Map<String, String>> printResults) {
+        List<Thread> threads = new ArrayList<>();
+
+        // Поток 1: для студентов 3 и 4 (если есть)
+        if (totalStudents >= 3) {
+            Thread thread1 = new Thread(() -> {
+                String message1 = "Parallel thread 1 - Student 3: " + studentNames.get(2);
+                System.out.println(message1);
+                addPrintResult(printResults, "parallel-1", 3, studentNames.get(2), message1);
+
+                if (totalStudents >= 4) {
+                    String message2 = "Parallel thread 1 - Student 4: " + studentNames.get(3);
+                    System.out.println(message2);
+                    addPrintResult(printResults, "parallel-1", 4, studentNames.get(3), message2);
+                }
+            });
+            thread1.setName("ParallelThread-1");
+            threads.add(thread1);
+        }
+
+        // Поток 2: для студентов 5 и 6 (если есть)
+        if (totalStudents >= 5) {
+            Thread thread2 = new Thread(() -> {
+                String message1 = "Parallel thread 2 - Student 5: " + studentNames.get(4);
+                System.out.println(message1);
+                addPrintResult(printResults, "parallel-2", 5, studentNames.get(4), message1);
+
+                if (totalStudents >= 6) {
+                    String message2 = "Parallel thread 2 - Student 6: " + studentNames.get(5);
+                    System.out.println(message2);
+                    addPrintResult(printResults, "parallel-2", 6, studentNames.get(5), message2);
+                }
+            });
+            thread2.setName("ParallelThread-2");
+            threads.add(thread2);
+        }
+
+        logger.debug("Created {} parallel threads", threads.size());
+        return threads;
+    }
+
+    private void addPrintResult(List<Map<String, String>> printResults, String threadType,
+                                int studentNumber, String studentName, String message) {
+        Map<String, String> result = new HashMap<>();
+        result.put("thread_type", threadType);
+        result.put("thread_name", threadType.equals("main") ? "Main Thread" : "Parallel Thread " + threadType.split("-")[1]);
+        result.put("student_number", String.valueOf(studentNumber));
+        result.put("student_name", studentName);
+        result.put("message", message);
+
+        printResults.add(result);
+    }
+
+    private void startAndWaitThreads(List<Thread> threads) {
+        // Просто запускаем потоки без сложной обработки прерываний
+        threads.forEach(Thread::start);
+        threads.forEach(thread -> {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                // Упрощенная обработка - просто прерываем текущий поток
+                Thread.currentThread().interrupt();
+            }
+        });
+    }
 }
