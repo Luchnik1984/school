@@ -185,7 +185,7 @@ public class StudentController {
         List<String> studentNames = service.getStudentNamesForParallelPrinting();
 
         if (studentNames.isEmpty()) {
-            return ResponseEntity.ok(createSimpleResponse());
+            return ResponseEntity.ok(service.createSimpleResponse());
         }
 
         Map<String, Object> result = service.printStudentNamesUniversal(studentNames, false);
@@ -203,7 +203,7 @@ public class StudentController {
         List<String> studentNames = service.getStudentNamesForParallelPrinting();
 
         if (studentNames.isEmpty()) {
-            return ResponseEntity.ok(createSimpleResponse());
+            return ResponseEntity.ok(service.createSimpleResponse());
         }
 
         Map<String, Object> result = service.printStudentNamesUniversal(studentNames, true);
@@ -213,18 +213,7 @@ public class StudentController {
         return ResponseEntity.ok(result);
     }
 
-    /**
-     * Создает простой ответ (для случая без студентов)
-     */
-    private Map<String, Object> createSimpleResponse() {
-        Map<String, Object> response = new HashMap<>();
-        response.put("message", "No students found");
-        response.put("total_students", 0);
-        response.put("printed_students", 0);
-        response.put("status", "success");
-        response.put("print_results", Collections.emptyList());
-        return response;
-    }
+
 
 }
 

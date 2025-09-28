@@ -324,4 +324,17 @@ public class StudentService {
             }
         });
     }
+
+    /**
+     * Создает простой ответ (для случая без студентов)
+     */
+    public Map<String, Object> createSimpleResponse() {
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "No students found");
+        response.put("total_students", 0);
+        response.put("printed_students", 0);
+        response.put("status", "success");
+        response.put("print_results", Collections.emptyList());
+        return response;
+    }
 }
