@@ -31,11 +31,11 @@ public class StudentService {
     public Student getStudent(long id) {
         logger.info("Was invoked method for get student with id = {}", id);
 
-       Student student = studentRepository.findById(id).orElse(null);
-       if (student == null) {
-           logger.warn("Student with id {} not found", id);
-       }
-       return student;
+        Student student = studentRepository.findById(id).orElse(null);
+        if (student == null) {
+            logger.warn("Student with id {} not found", id);
+        }
+        return student;
     }
 
     public Student updateStudent(long id, Student student) {
@@ -65,7 +65,7 @@ public class StudentService {
     public Collection<Student> getAllStudents() {
         logger.info("Was invoked method for get all students");
 
-        Collection<Student>students = studentRepository.findAll();
+        Collection<Student> students = studentRepository.findAll();
         logger.debug("Found {} students", students.size());
         return students;
     }
@@ -88,7 +88,7 @@ public class StudentService {
 
     public Faculty getFacultyByStudentId(Long studentId) {
         logger.info("Was invoked method for get faculty by student id {}", studentId);
-        Faculty faculty =  facultyRepository.findByStudentsId(studentId);
+        Faculty faculty = facultyRepository.findByStudentsId(studentId);
         if (faculty == null) {
             logger.debug("No faculty found for student id {}", studentId);
         }
@@ -102,14 +102,14 @@ public class StudentService {
         return count;
     }
 
-    public Double getAverageAge(){
+    public Double getAverageAge() {
         logger.info("Was invoked method for get average age of students");
         Double averageAge = studentRepository.findAverageAge();
         logger.debug(" Average age of students {}", averageAge);
         return averageAge;
     }
 
-    public List<Student> getLastFiveStudents(){
+    public List<Student> getLastFiveStudents() {
         logger.info("Was invoked method for get last five students");
         List<Student> students = studentRepository.findLastFiveStudents();
         logger.debug("Found {} last students", students.size());
@@ -128,22 +128,22 @@ public class StudentService {
         String searchLetter = letter.trim().toUpperCase().substring(0, 1);
         logger.debug("Searching for names starting with letter {}", searchLetter);
 
-        List<Student>allStudents = studentRepository.findAll();
+        List<Student> allStudents = studentRepository.findAll();
         logger.debug("Found {} students in database", allStudents.size());
 
         List<String> result = allStudents.stream()
                 .map(Student::getName)
                 .filter(Objects::nonNull)
                 .map(String::trim)
-                .filter(name->!name.isEmpty())
+                .filter(name -> !name.isEmpty())
                 .map(String::toUpperCase)
-                .filter(name ->name.startsWith(searchLetter))
+                .filter(name -> name.startsWith(searchLetter))
                 .sorted()
                 .collect(Collectors.toList());
 
         logger.debug("Found {} students with names starting with letter {}", result.size(), searchLetter);
 
-        if (result.isEmpty()){
+        if (result.isEmpty()) {
             logger.warn("No students found with names starting with letter {}", searchLetter);
         } else {
             logger.info("Student names starting with {}: {}", searchLetter, result);
@@ -151,13 +151,13 @@ public class StudentService {
         return result;
     }
 
-    public Double getAverageAgeOfAllStudents(){
+    public Double getAverageAgeOfAllStudents() {
         logger.info("Was invoked method for get average age of all students");
 
-        List<Student>allStudents = studentRepository.findAll();
+        List<Student> allStudents = studentRepository.findAll();
         logger.debug("Found {} students", allStudents.size());
 
-        if (allStudents.isEmpty()){
+        if (allStudents.isEmpty()) {
             logger.warn("No students found - can't calculate average age of all students");
             return 0.0;
         }
@@ -191,87 +191,113 @@ public class StudentService {
         return studentNames;
     }
 
+
     /**
-     *  Гибкий метод для параллельного вывода имен студентов
+     * Универсальный метод для вывода имен студентов с опцией синхронизации
      */
-    public Map<String, Object> printStudentNamesInParallelWithInfo(List<String> studentNames) {
-        logger.info("Printing {} student names in parallel with info collection", studentNames.size());
+    private final Object printLock = new Object();
+
+    public Map<String, Object> printStudentNamesUniversal(List<String> studentNames, boolean synchronizedPrint) {
+        logger.info("Printing {} student names in {} mode",
+                studentNames.size(), synchronizedPrint ? "synchronized" : "parallel");
 
         int totalStudents = studentNames.size();
         Map<String, Object> result = new LinkedHashMap<>();
-        List<Map<String, String>> printResults = new ArrayList<>(); // Убрали synchronizedList
+        List<Map<String, String>> printResults = new ArrayList<>();
 
         result.put("total_students", totalStudents);
         result.put("printed_students", Math.min(totalStudents, 6));
+        result.put("synchronized", synchronizedPrint);
 
-        // Всегда выводим первых двух студентов в основном потоке (если они есть)
-        printInMainThreadWithInfo(studentNames, totalStudents, printResults);
+        // Вывод в основном потоке
+        if (synchronizedPrint) {
+            synchronized (printLock) {
+                printStudentsInRange(studentNames, 0, 2, "main", printResults);
+            }
+        } else {
+            printStudentsInRange(studentNames, 0, 2, "main", printResults);
+        }
 
         // Создаем и запускаем параллельные потоки
-        List<Thread> threads = createParallelThreadsWithInfo(studentNames, totalStudents, printResults);
+        List<Thread> threads = createUniversalThreads(studentNames, totalStudents, printResults, synchronizedPrint);
         startAndWaitThreads(threads);
 
         result.put("print_results", printResults);
-        result.put("threads_count", threads.size() + 1); // +1 для основного потока
+        result.put("threads_count", threads.size() + 1);
 
-        logger.info("Parallel printing completed for {} students", totalStudents);
+        logger.info("Printing completed for {} students in {} mode",
+                totalStudents, synchronizedPrint ? "synchronized" : "parallel");
         return result;
     }
 
-    private void printInMainThreadWithInfo(List<String> studentNames, int totalStudents,
-                                           List<Map<String, String>> printResults) {
-        if (totalStudents >= 1) {
-            String message = "Main thread - Student 1: " + studentNames.get(0);
-            System.out.println(message);
-            addPrintResult(printResults, "main", 1, studentNames.get(0), message);
-        }
-        if (totalStudents >= 2) {
-            String message = "Main thread - Student 2: " + studentNames.get(1);
-            System.out.println(message);
-            addPrintResult(printResults, "main", 2, studentNames.get(1), message);
-        }
-    }
-
-    private List<Thread> createParallelThreadsWithInfo(List<String> studentNames, int totalStudents,
-                                                       List<Map<String, String>> printResults) {
+    /**
+     * Создание универсальных потоков для обоих режимов
+     */
+    private List<Thread> createUniversalThreads(List<String> studentNames, int totalStudents,
+                                                List<Map<String, String>> printResults, boolean synchronizedPrint) {
         List<Thread> threads = new ArrayList<>();
 
-        // Поток 1: для студентов 3 и 4 (если есть)
+        // Поток 1: для студентов 3 и 4
         if (totalStudents >= 3) {
             Thread thread1 = new Thread(() -> {
-                String message1 = "Parallel thread 1 - Student 3: " + studentNames.get(2);
-                System.out.println(message1);
-                addPrintResult(printResults, "parallel-1", 3, studentNames.get(2), message1);
-
-                if (totalStudents >= 4) {
-                    String message2 = "Parallel thread 1 - Student 4: " + studentNames.get(3);
-                    System.out.println(message2);
-                    addPrintResult(printResults, "parallel-1", 4, studentNames.get(3), message2);
+                if (synchronizedPrint) {
+                    synchronized (printLock) {
+                        printStudentsInRange(studentNames, 2, 4, "parallel-1", printResults);
+                    }
+                } else {
+                    printStudentsInRange(studentNames, 2, 4, "parallel-1", printResults);
                 }
             });
             thread1.setName("ParallelThread-1");
             threads.add(thread1);
         }
 
-        // Поток 2: для студентов 5 и 6 (если есть)
+        // Поток 2: для студентов 5 и 6
         if (totalStudents >= 5) {
             Thread thread2 = new Thread(() -> {
-                String message1 = "Parallel thread 2 - Student 5: " + studentNames.get(4);
-                System.out.println(message1);
-                addPrintResult(printResults, "parallel-2", 5, studentNames.get(4), message1);
-
-                if (totalStudents >= 6) {
-                    String message2 = "Parallel thread 2 - Student 6: " + studentNames.get(5);
-                    System.out.println(message2);
-                    addPrintResult(printResults, "parallel-2", 6, studentNames.get(5), message2);
+                if (synchronizedPrint) {
+                    synchronized (printLock) {
+                        printStudentsInRange(studentNames, 4, 6, "parallel-2", printResults);
+                    }
+                } else {
+                    printStudentsInRange(studentNames, 4, 6, "parallel-2", printResults);
                 }
             });
             thread2.setName("ParallelThread-2");
             threads.add(thread2);
         }
 
-        logger.debug("Created {} parallel threads", threads.size());
         return threads;
+    }
+
+    /**
+     * Вывод студентов в диапазоне (без внутренней синхронизации)
+     */
+    private void printStudentsInRange(List<String> studentNames, int start, int end,
+                                      String threadType, List<Map<String, String>> printResults) {
+        for (int i = start; i < end && i < studentNames.size(); i++) {
+            printStudent(threadType, i + 1, studentNames.get(i), printResults);
+        }
+    }
+
+    /**
+     * Базовый вывод
+     */
+    private void printStudent(String threadType, int studentNumber, String studentName,
+                              List<Map<String, String>> printResults) {
+        String message = formatMessage(threadType, studentNumber, studentName);
+        System.out.println(message);
+        addPrintResult(printResults, threadType, studentNumber, studentName, message);
+    }
+
+
+    /**
+     * Форматирование сообщения (общая логика)
+     */
+    private String formatMessage(String threadType, int studentNumber, String studentName) {
+        String threadName = threadType.equals("main") ? "Main thread" :
+                "Parallel thread " + threadType.split("-")[1];
+        return threadName + " - Student " + studentNumber + ": " + studentName;
     }
 
     private void addPrintResult(List<Map<String, String>> printResults, String threadType,
@@ -297,86 +323,5 @@ public class StudentService {
                 Thread.currentThread().interrupt();
             }
         });
-    }
-
-
-    private final Object printLock = new Object();
-
-    /**
-     * Метод для синхронизированного вывода имен студентов
-     */
-    public Map<String, Object> printStudentNamesSynchronized(List<String> studentNames) {
-        logger.info("Printing {} student names with synchronization", studentNames.size());
-
-        int totalStudents = studentNames.size();
-        Map<String, Object> result = new LinkedHashMap<>();
-        List<Map<String, String>> printResults = new ArrayList<>();
-
-        result.put("total_students", totalStudents);
-        result.put("printed_students", Math.min(totalStudents, 6));
-
-        // Все потоки используют общий объект для синхронизации
-        List<Thread> threads = new ArrayList<>();
-
-        // Основной поток - студенты 1 и 2
-        if (totalStudents >= 1) {
-            synchronized (printLock) {
-                printStudent("Main thread", 1, studentNames.get(0), printResults);
-            }
-        }
-        if (totalStudents >= 2) {
-            synchronized (printLock) {
-                printStudent("Main thread", 2, studentNames.get(1), printResults);
-            }
-        }
-
-        // Поток 1: для студентов 3 и 4
-        if (totalStudents >= 3) {
-            Thread thread1 = new Thread(() -> {
-                synchronized (printLock) {
-                    printStudent("Parallel thread 1", 3, studentNames.get(2), printResults);
-                }
-                synchronized (printLock) {
-                    if (totalStudents >= 4) {
-                        printStudent("Parallel thread 1", 4, studentNames.get(3), printResults);
-                    }
-                }
-            });
-            threads.add(thread1);
-        }
-
-        // Поток 2: для студентов 5 и 6
-        if (totalStudents >= 5) {
-            Thread thread2 = new Thread(() -> {
-                synchronized (printLock) {
-                    printStudent("Parallel thread 2", 5, studentNames.get(4), printResults);
-                }
-                synchronized (printLock) {
-                    if (totalStudents >= 6) {
-                        printStudent("Parallel thread 2", 6, studentNames.get(5), printResults);
-                    }
-                }
-            });
-            threads.add(thread2);
-        }
-
-        startAndWaitThreads(threads);
-
-        result.put("print_results", printResults);
-        result.put("threads_count", threads.size() + 1);
-        result.put("synchronized", true);
-
-        logger.info("Synchronized printing completed for {} students", totalStudents);
-        return result;
-    }
-
-    private void printStudent(String threadName, int studentNumber, String studentName,
-                              List<Map<String, String>> printResults) {
-        String message = threadName + " - Student " + studentNumber + ": " + studentName;
-        System.out.println(message);
-        addPrintResult(printResults,
-                threadName.toLowerCase().contains("parallel") ?
-                        "parallel-" + threadName.split(" ")[2] : "main",
-                studentNumber, studentName, message);
     }
 }

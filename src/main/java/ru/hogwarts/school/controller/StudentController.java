@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.*;
 import ru.hogwarts.school.dto.FacultyWithoutStudents;
 import ru.hogwarts.school.dto.StudentWithFaculty;
 import ru.hogwarts.school.dto.StudentWithoutFaculty;
-import ru.hogwarts.school.mapper.StudentMapper;
 import ru.hogwarts.school.mapper.FacultyMapper;
+import ru.hogwarts.school.mapper.StudentMapper;
 import ru.hogwarts.school.model.Faculty;
 import ru.hogwarts.school.model.Student;
 import ru.hogwarts.school.service.StudentService;
@@ -176,33 +176,42 @@ public class StudentController {
         return ResponseEntity.ok(averageAge);
     }
 
+
     @Operation(summary = "Вывести имена студентов в параллельных потоках")
     @GetMapping("/print-parallel")
     public ResponseEntity<Map<String, Object>> printStudentNamesInParallel() {
-        logger.info("Was invoked endpoint for print student names in parallel with info");
+        logger.info("Was invoked endpoint for print student names in parallel");
 
         List<String> studentNames = service.getStudentNamesForParallelPrinting();
 
         if (studentNames.isEmpty()) {
-            logger.warn("No students found for parallel printing");
             return ResponseEntity.ok(createSimpleResponse());
         }
 
-        Map<String, Object> printInfo = service.printStudentNamesInParallelWithInfo(studentNames);
+        Map<String, Object> result = service.printStudentNamesUniversal(studentNames, false);
+        result.put("message", "Student names printed in parallel successfully");
+        result.put("status", "success");
 
-        // добавляем всю информацию из printInfo в ответ
-        Map<String, Object> response = new HashMap<>();
-        response.put("message", "Student names printed in parallel successfully");
-        response.put("total_students", studentNames.size());
-        response.put("printed_students", Math.min(studentNames.size(), 6));
-        response.put("status", "success");
-        response.putAll(printInfo); // Добавляем все данные из сервиса
-
-        logger.info("Parallel printing completed successfully with {} threads",
-                printInfo.get("threads_count"));
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(result);
     }
 
+    @Operation(summary = "Вывести имена студентов в синхронизированных параллельных потоках")
+    @GetMapping("/print-synchronized")
+    public ResponseEntity<Map<String, Object>> printStudentNamesSynchronized() {
+        logger.info("Was invoked endpoint for print student names with synchronization");
+
+        List<String> studentNames = service.getStudentNamesForParallelPrinting();
+
+        if (studentNames.isEmpty()) {
+            return ResponseEntity.ok(createSimpleResponse());
+        }
+
+        Map<String, Object> result = service.printStudentNamesUniversal(studentNames, true);
+        result.put("message", "Student names printed with synchronization successfully");
+        result.put("status", "success");
+
+        return ResponseEntity.ok(result);
+    }
 
     /**
      * Создает простой ответ (для случая без студентов)
@@ -215,33 +224,6 @@ public class StudentController {
         response.put("status", "success");
         response.put("print_results", Collections.emptyList());
         return response;
-    }
-
-    @Operation(summary = "Вывести имена студентов в синхронизированных параллельных потоках")
-    @GetMapping("/print-synchronized")
-    public ResponseEntity<Map<String, Object>> printStudentNamesSynchronized() {
-        logger.info("Was invoked endpoint for print student names with synchronization");
-
-        List<String> studentNames = service.getStudentNamesForParallelPrinting();
-
-        if (studentNames.isEmpty()) {
-            logger.warn("No students found for synchronized printing");
-            return ResponseEntity.ok(createSimpleResponse());
-        }
-
-        Map<String, Object> printInfo = service.printStudentNamesSynchronized(studentNames);
-
-        // добавляем всю информацию из printInfo в ответ
-        Map<String, Object> response = new HashMap<>();
-        response.put("message", "Student names printed with synchronization successfully");
-        response.put("total_students", studentNames.size());
-        response.put("printed_students", Math.min(studentNames.size(), 6));
-        response.put("status", "success");
-        response.putAll(printInfo);
-
-        logger.info("Synchronized printing completed successfully with {} threads",
-                printInfo.get("threads_count"));
-        return ResponseEntity.ok(response);
     }
 
 }
