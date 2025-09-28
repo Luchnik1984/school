@@ -104,9 +104,9 @@ public class StudentService {
 
     public Double getAverageAge(){
         logger.info("Was invoked method for get average age of students");
-        Double avarageAge = studentRepository.findAverageAge();
-        logger.debug(" Average age of students {}", avarageAge);
-        return avarageAge;
+        Double averageAge = studentRepository.findAverageAge();
+        logger.debug(" Average age of students {}", averageAge);
+        return averageAge;
     }
 
     public List<Student> getLastFiveStudents(){
@@ -287,15 +287,96 @@ public class StudentService {
     }
 
     private void startAndWaitThreads(List<Thread> threads) {
-        // Просто запускаем потоки без сложной обработки прерываний
+        // Запускаем поток
         threads.forEach(Thread::start);
         threads.forEach(thread -> {
             try {
                 thread.join();
             } catch (InterruptedException e) {
-                // Упрощенная обработка - просто прерываем текущий поток
+                // прерываем текущий поток
                 Thread.currentThread().interrupt();
             }
         });
+    }
+
+
+    private final Object printLock = new Object();
+
+    /**
+     * Метод для синхронизированного вывода имен студентов
+     */
+    public Map<String, Object> printStudentNamesSynchronized(List<String> studentNames) {
+        logger.info("Printing {} student names with synchronization", studentNames.size());
+
+        int totalStudents = studentNames.size();
+        Map<String, Object> result = new LinkedHashMap<>();
+        List<Map<String, String>> printResults = new ArrayList<>();
+
+        result.put("total_students", totalStudents);
+        result.put("printed_students", Math.min(totalStudents, 6));
+
+        // Все потоки используют общий объект для синхронизации
+        List<Thread> threads = new ArrayList<>();
+
+        // Основной поток - студенты 1 и 2
+        if (totalStudents >= 1) {
+            synchronized (printLock) {
+                printStudent("Main thread", 1, studentNames.get(0), printResults);
+            }
+        }
+        if (totalStudents >= 2) {
+            synchronized (printLock) {
+                printStudent("Main thread", 2, studentNames.get(1), printResults);
+            }
+        }
+
+        // Поток 1: для студентов 3 и 4
+        if (totalStudents >= 3) {
+            Thread thread1 = new Thread(() -> {
+                synchronized (printLock) {
+                    printStudent("Parallel thread 1", 3, studentNames.get(2), printResults);
+                }
+                synchronized (printLock) {
+                    if (totalStudents >= 4) {
+                        printStudent("Parallel thread 1", 4, studentNames.get(3), printResults);
+                    }
+                }
+            });
+            threads.add(thread1);
+        }
+
+        // Поток 2: для студентов 5 и 6
+        if (totalStudents >= 5) {
+            Thread thread2 = new Thread(() -> {
+                synchronized (printLock) {
+                    printStudent("Parallel thread 2", 5, studentNames.get(4), printResults);
+                }
+                synchronized (printLock) {
+                    if (totalStudents >= 6) {
+                        printStudent("Parallel thread 2", 6, studentNames.get(5), printResults);
+                    }
+                }
+            });
+            threads.add(thread2);
+        }
+
+        startAndWaitThreads(threads);
+
+        result.put("print_results", printResults);
+        result.put("threads_count", threads.size() + 1);
+        result.put("synchronized", true);
+
+        logger.info("Synchronized printing completed for {} students", totalStudents);
+        return result;
+    }
+
+    private void printStudent(String threadName, int studentNumber, String studentName,
+                              List<Map<String, String>> printResults) {
+        String message = threadName + " - Student " + studentNumber + ": " + studentName;
+        System.out.println(message);
+        addPrintResult(printResults,
+                threadName.toLowerCase().contains("parallel") ?
+                        "parallel-" + threadName.split(" ")[2] : "main",
+                studentNumber, studentName, message);
     }
 }
